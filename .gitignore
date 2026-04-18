@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Node
+node_modules/
+dist/
+
+# Models
+*.pt
+*.pth
+*.onnx
+
+# Data
+*.mp4
+*.avi
+
+# Environment
+.env
+.DS_Store

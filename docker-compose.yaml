@@ -1,0 +1,32 @@
+services:
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - ollama_host=http://ollama:11434
+    depends_on:
+      - ollama
+    restart: always
+      
+  frontend:
+    build: 
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: always
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: always
+
+volumes:
+  ollama_data:

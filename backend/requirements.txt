@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+opencv-python-headless
+ultralytics
+torch
+torchvision
+numpy
+httpx
+websockets

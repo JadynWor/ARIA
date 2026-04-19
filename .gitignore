@@ -14,9 +14,19 @@ dist/
 *.onnx
 
 # Data
+data/
 *.mp4
 *.avi
+
+# Training runs
+runs/
 
 # Environment
 .env
 .DS_Store
+
+# Docker
+ollama_data/
+
+# Colab checkpoints
+.ipynb_checkpoints/

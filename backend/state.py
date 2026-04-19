@@ -10,12 +10,6 @@ class SharedState:
     self._briefing = ""
     self._timestamp = 0
 
-  def update_detections(self, detections):
-    #grab lock
-    with self._lock:
-      self._detections = detections
-      self._timestamp = time.time()
-  
   def get_snapshot(self):
     with self._lock:
       return {
@@ -33,7 +27,9 @@ class SharedState:
   def update_briefing(self, briefing):
     with self._lock:
       self._briefing = briefing 
-  
-  def update_latest_frame(self, frame):
+
+  def update_frame_and_detections(self, frame, detections):
     with self._lock:
       self._latest_frame = frame
+      self._detections = detections
+      self._timestamp = time.time()

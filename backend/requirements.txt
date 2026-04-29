@@ -7,4 +7,4 @@ torchvision
 numpy
 httpx
 websockets
-bytetracker
+supervision

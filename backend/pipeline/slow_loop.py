@@ -4,7 +4,7 @@ import httpx
 import cv2
 
 def slow_loop(shared_state):
-    ollama_url = "http://ollama:11434/api/generate"
+    ollama_url = "http://localhost:11434/api/generate"
     
     while True:
         time.sleep(10)
@@ -14,8 +14,10 @@ def slow_loop(shared_state):
         if snapshot["latest_frame"] is None:
             continue
         
-        # Encode frame to base64 for Gemma multimodal
-        _, buffer = cv2.imencode('.jpg', snapshot["latest_frame"])
+
+        # Resize frame for Gemma — smaller = faster inference
+        small_frame = cv2.resize(snapshot["latest_frame"], (320, 320))
+        _, buffer = cv2.imencode('.jpg', small_frame, [cv2.IMWRITE_JPEG_QUALITY, 50])
         frame_base64 = base64.b64encode(buffer).decode('utf-8')
         
         # Build detection summary for the prompt
@@ -56,7 +58,7 @@ RECOMMENDED NEXT ACTION: [what the drone should do next]"""
                     "images": [frame_base64],
                     "stream": False
                 },
-                timeout=60.0
+                timeout=120.0
             )
             
             briefing = response.json().get("response", "Briefing generation failed.")

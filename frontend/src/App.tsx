@@ -3,9 +3,11 @@ import './App.css'
 
 interface Detection {
   id: number
-  grid: string
-  classification: string
+  bbox: number[]
   confidence: number
+  class_id: number
+  classification?: string
+  priority_score?: number
 }
 
 interface FrameMessage {
@@ -28,6 +30,24 @@ interface CoverageMessage {
 
 type WSMessage = FrameMessage | BriefingMessage | CoverageMessage
 
+// Convert bbox center to grid cell
+function bboxToGrid(bbox: number[], imageWidth = 640, imageHeight = 640): string {
+  const cols = ['A', 'B', 'C', 'D', 'E']
+  const rows = ['1', '2', '3', '4', '5', '6', '7', '8']
+  const cx = (bbox[0] + bbox[2]) / 2
+  const cy = (bbox[1] + bbox[3]) / 2
+  const colIdx = Math.min(Math.floor((cx / imageWidth) * cols.length), cols.length - 1)
+  const rowIdx = Math.min(Math.floor((cy / imageHeight) * rows.length), rows.length - 1)
+  return `${cols[colIdx]}${rows[rowIdx]}`
+}
+
+function confidenceColor(conf: number): string {
+  if (conf >= 0.8) return '#ff3b3b'
+  if (conf >= 0.6) return '#ff8c3b'
+  if (conf >= 0.4) return '#ffd03b'
+  return '#888'
+}
+
 function App() {
   const [detections, setDetections] = useState<Detection[]>([])
   const [briefing, setBriefing] = useState<string>('')
@@ -39,29 +59,8 @@ function App() {
   const [frameImage, setFrameImage] = useState<string>('')
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  // Grid configuration
   const gridCols = ['A', 'B', 'C', 'D', 'E']
   const gridRows = ['1', '2', '3', '4', '5', '6', '7', '8']
-
-  const classificationColor = (cls: string): string => {
-    switch (cls) {
-      case 'WAVING': return '#ff3b3b'
-      case 'LYING_DOWN': return '#ff8c3b'
-      case 'STATIONARY': return '#ffd03b'
-      case 'OBSCURED': return '#888'
-      default: return '#666'
-    }
-  }
-
-  const priorityFromClassification = (cls: string, conf: number): number => {
-    const weights: Record<string, number> = {
-      'WAVING': 1.0,
-      'LYING_DOWN': 0.85,
-      'OBSCURED': 0.7,
-      'STATIONARY': 0.5,
-    }
-    return (weights[cls] || 0.5) * conf
-  }
 
   useEffect(() => {
     const socket = new WebSocket('ws://localhost:8000/stream')
@@ -109,11 +108,10 @@ function App() {
     const cellW = w / gridCols.length
     const cellH = h / gridRows.length
 
-    // Clear
     ctx.fillStyle = '#0a0f14'
     ctx.fillRect(0, 0, w, h)
 
-    // Draw grid
+    // Draw grid cells
     gridCols.forEach((col, ci) => {
       gridRows.forEach((row, ri) => {
         const cellId = `${col}${row}`
@@ -128,58 +126,59 @@ function App() {
         ctx.lineWidth = 0.5
         ctx.strokeRect(x, y, cellW, cellH)
 
-        // Cell label
         ctx.fillStyle = 'rgba(255,255,255,0.15)'
         ctx.font = '9px "IBM Plex Mono", monospace'
         ctx.fillText(cellId, x + 4, y + 12)
       })
     })
 
-    // Draw detections on map
-    detections
-      .sort((a, b) => priorityFromClassification(b.classification, b.confidence) - priorityFromClassification(a.classification, a.confidence))
-      .forEach((det) => {
-        const col = det.grid[0]
-        const row = det.grid.slice(1)
-        const ci = gridCols.indexOf(col)
-        const ri = gridRows.indexOf(row)
-        if (ci === -1 || ri === -1) return
+    // Draw detections on map using bbox coordinates
+    detections.forEach((det) => {
+      if (!det.bbox || det.bbox.length < 4) return
 
-        const cx = ci * cellW + cellW / 2
-        const cy = ri * cellH + cellH / 2
-        const color = classificationColor(det.classification)
+      const grid = bboxToGrid(det.bbox)
+      const col = grid[0]
+      const row = grid.slice(1)
+      const ci = gridCols.indexOf(col)
+      const ri = gridRows.indexOf(row)
+      if (ci === -1 || ri === -1) return
 
-        // Pulse ring
-        ctx.beginPath()
-        ctx.arc(cx, cy, 14, 0, Math.PI * 2)
-        ctx.strokeStyle = color
-        ctx.lineWidth = 1
-        ctx.globalAlpha = 0.3
-        ctx.stroke()
-        ctx.globalAlpha = 1
+      const cx = ci * cellW + cellW / 2
+      const cy = ri * cellH + cellH / 2
+      const color = confidenceColor(det.confidence)
+      const label = det.classification || 'DETECTED'
 
-        // Detection dot
-        ctx.beginPath()
-        ctx.arc(cx, cy, 6, 0, Math.PI * 2)
-        ctx.fillStyle = color
-        ctx.fill()
+      // Pulse ring
+      ctx.beginPath()
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2)
+      ctx.strokeStyle = color
+      ctx.lineWidth = 1
+      ctx.globalAlpha = 0.3
+      ctx.stroke()
+      ctx.globalAlpha = 1
 
-        // ID label
-        ctx.fillStyle = '#fff'
-        ctx.font = 'bold 10px "IBM Plex Mono", monospace'
-        ctx.textAlign = 'center'
-        ctx.fillText(`P${det.id}`, cx, cy - 18)
+      // Detection dot
+      ctx.beginPath()
+      ctx.arc(cx, cy, 6, 0, Math.PI * 2)
+      ctx.fillStyle = color
+      ctx.fill()
 
-        // Classification label
-        ctx.font = '8px "IBM Plex Mono", monospace'
-        ctx.fillStyle = color
-        ctx.fillText(det.classification, cx, cy + 24)
-        ctx.textAlign = 'start'
-      })
+      // ID label
+      ctx.fillStyle = '#fff'
+      ctx.font = 'bold 10px "IBM Plex Mono", monospace'
+      ctx.textAlign = 'center'
+      ctx.fillText(`P${det.id}`, cx, cy - 18)
+
+      // Status label
+      ctx.font = '8px "IBM Plex Mono", monospace'
+      ctx.fillStyle = color
+      ctx.fillText(`${(det.confidence * 100).toFixed(0)}%`, cx, cy + 24)
+      ctx.textAlign = 'start'
+    })
   }, [detections, coverage])
 
   const sortedDetections = [...detections].sort(
-    (a, b) => priorityFromClassification(b.classification, b.confidence) - priorityFromClassification(a.classification, a.confidence)
+    (a, b) => b.confidence - a.confidence
   )
 
   return (
@@ -227,12 +226,12 @@ function App() {
           {/* Detection list under video */}
           <div className="detection-list">
             {sortedDetections.map((det, i) => (
-              <div key={det.id} className="detection-item" style={{ borderLeftColor: classificationColor(det.classification) }}>
+              <div key={det.id} className="detection-item" style={{ borderLeftColor: confidenceColor(det.confidence) }}>
                 <span className="det-priority">P{i + 1}</span>
                 <span className="det-id">ID-{det.id}</span>
-                <span className="det-grid">{det.grid}</span>
-                <span className="det-class" style={{ color: classificationColor(det.classification) }}>
-                  {det.classification}
+                <span className="det-grid">{bboxToGrid(det.bbox)}</span>
+                <span className="det-class" style={{ color: confidenceColor(det.confidence) }}>
+                  {det.classification || 'HUMAN'}
                 </span>
                 <span className="det-conf">{(det.confidence * 100).toFixed(0)}%</span>
               </div>

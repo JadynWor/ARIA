@@ -49,6 +49,12 @@ async def streamDrone(websocket: WebSocket):
                     "timestamp": str(snapshot["timestamp"])
                 })
                 last_briefing = snapshot["briefing"]
+
+            await websocket.send_json({
+                "type": "coverage",
+                "searched": snapshot["searched"],
+                "percentage": snapshot["coverage"]
+            })
             await asyncio.sleep(0.2)
     except Exception as e:
         print(f"WebSocket connection closed: {e}")

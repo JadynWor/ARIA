@@ -9,6 +9,7 @@ class SharedState:
     self._latest_frame = None
     self._briefing = ""
     self._timestamp = 0
+    self._searched_cells = set()
 
   def get_snapshot(self):
     with self._lock:
@@ -17,7 +18,9 @@ class SharedState:
         "homography": self._homography,
         "latest_frame": self._latest_frame.copy() if self._latest_frame is not None else None,
         "briefing": self._briefing,
-        "timestamp": self._timestamp
+        "timestamp": self._timestamp,
+        "searched": list(self._searched_cells),
+        "coverage": int(len(self._searched_cells) / 40 * 100)  # Assuming 40 total cells for coverage calculation
       }
   
   def update_homography(self, homography):
@@ -33,3 +36,7 @@ class SharedState:
       self._latest_frame = frame
       self._detections = detections
       self._timestamp = time.time()
+
+  def update_coverage(self, cell):
+    with self._lock:
+      self._searched_cells.add(cell)

@@ -1,18 +1,18 @@
 from fastapi import FastAPI, WebSocket
 import asyncio
 import threading
-import base64
+import time
 import cv2
 from state import SharedState
 from pipeline.fast_loop import fast_loop
 from pipeline.slow_loop import slow_loop
 from pipeline.medium_loop import medium_loop
+from fastapi.responses import StreamingResponse
 
 app = FastAPI()
 shared_state = SharedState()
 VIDEO_PATH = "data/sample.mp4"
 
-# Launch threads when app starts
 @app.on_event("startup")
 def startup_event():
     threading.Thread(target=fast_loop, args=(shared_state, VIDEO_PATH), daemon=True).start()
@@ -23,25 +23,38 @@ def startup_event():
 def read_root():
     return {"status": "ARIA running"}
 
+def generate_frames():
+    while True:
+        snapshot = shared_state.get_snapshot()
+        if snapshot["latest_frame"] is not None:
+            small = cv2.resize(snapshot["latest_frame"], (640, 480))
+            _, buffer = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 70])
+            frame_bytes = buffer.tobytes()
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+        time.sleep(0.1)
+
+@app.get("/video_feed")
+def video_feed():
+    return StreamingResponse(
+        generate_frames(),
+        media_type="multipart/x-mixed-replace; boundary=frame"
+    )
+
 @app.websocket("/stream")
 async def streamDrone(websocket: WebSocket):
-    # read from shared_state, not mock data
     await websocket.accept()
     last_briefing = ""
     try:
         while True:
             snapshot = shared_state.get_snapshot()
 
-            if snapshot["latest_frame"] is not None:
-                small = cv2.resize(snapshot["latest_frame"], (640, 480))
-                _, buffer = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 60])
-                frame_base64 = base64.b64encode(buffer).decode('utf-8')
+            # Detections only — no image
+            await websocket.send_json({
+                "type": "frame",
+                "detections": snapshot["detections"],
+            })
 
-                await websocket.send_json({
-                    "type": "frame",
-                    "image": frame_base64,
-                    "detections": snapshot["detections"],
-                })
             if snapshot["briefing"] and snapshot["briefing"] != last_briefing:
                 await websocket.send_json({
                     "type": "briefing",
@@ -57,4 +70,4 @@ async def streamDrone(websocket: WebSocket):
             })
             await asyncio.sleep(0.2)
     except Exception as e:
-        print(f"WebSocket connection closed: {e}")
+        print(f"WebSocket closed: {e}")

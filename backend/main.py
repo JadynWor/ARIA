@@ -33,7 +33,8 @@ async def streamDrone(websocket: WebSocket):
             snapshot = shared_state.get_snapshot()
 
             if snapshot["latest_frame"] is not None:
-                _, buffer = cv2.imencode('.jpg', snapshot["latest_frame"])
+                small = cv2.resize(snapshot["latest_frame"], (640, 480))
+                _, buffer = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 60])
                 frame_base64 = base64.b64encode(buffer).decode('utf-8')
 
                 await websocket.send_json({
@@ -48,6 +49,6 @@ async def streamDrone(websocket: WebSocket):
                     "timestamp": str(snapshot["timestamp"])
                 })
                 last_briefing = snapshot["briefing"]
-            await asyncio.sleep(0.033)
+            await asyncio.sleep(0.2)
     except Exception as e:
         print(f"WebSocket connection closed: {e}")

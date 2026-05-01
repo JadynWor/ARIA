@@ -42,7 +42,7 @@ def fast_loop(shared_state, video_path):
     # Classify detections using the classification units
     detection_list = classify_detections(frame, detection_list)
       
-      # Draw detections on frame based on classfication data
+      # mark coverage
     for det in detection_list:
       x1, y1, x2, y2 = det["bbox"]
       cx = (x1 + x2) // 2
@@ -53,10 +53,6 @@ def fast_loop(shared_state, video_path):
       row_idx = min(int(cy / frame.shape[0] * 8), 7)
       cell = f"{cols[col_idx]}{rows[row_idx]}"
       shared_state.update_coverage(cell)
-      label = det.get("classification", "HUMAN")
-      conf = det["confidence"]
-      cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 4)
-      cv2.putText(frame, f"P{det['id']} {conf:.0%}", (x1, y1 - 20), cv2.FONT_HERSHEY_SIMPLEX, 2.0, (0, 255, 0), 4)
 
     shared_state.update_frame_and_detections(frame, detection_list)
     time.sleep(0.033)

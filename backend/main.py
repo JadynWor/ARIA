@@ -27,7 +27,23 @@ def generate_frames():
     while True:
         snapshot = shared_state.get_snapshot()
         if snapshot["latest_frame"] is not None:
+            frame = snapshot["latest_frame"]
+            h , w = frame.shape[:2]    
             small = cv2.resize(snapshot["latest_frame"], (960, 720))
+            scale_x = 960 / w
+            scale_y = 720 / h
+
+            for det in snapshot["detections"]:
+                x1, y1, x2, y2 = det["bbox"]
+                sx1 = int(x1 * scale_x)
+                sy1 = int(y1 * scale_y)
+                sx2 = int(x2 * scale_x)
+                sy2 = int(y2 * scale_y)
+                label = det.get("classification", "HUMAN")
+                conf = det["confidence"]
+                cv2.rectangle(small, (sx1, sy1), (sx2, sy2), (0, 255, 0), 2)
+                cv2.putText(small, f"P{det['id']} {conf:.0%}", (sx1, sy1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
             _, buffer = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 70])
             frame_bytes = buffer.tobytes()
             yield (b'--frame\r\n'

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import './App.css'
 
+/* ─── Types ─── */
 interface Detection {
   id: number
   bbox: number[]
@@ -8,11 +9,6 @@ interface Detection {
   class_id: number
   classification?: string
   priority_score?: number
-}
-
-interface FrameMessage {
-  type: 'frame'
-  detections: Detection[]
 }
 
 interface BriefingMessage {
@@ -27,8 +23,14 @@ interface CoverageMessage {
   percentage: number
 }
 
+interface FrameMessage {
+  type: 'frame'
+  detections: Detection[]
+}
+
 type WSMessage = FrameMessage | BriefingMessage | CoverageMessage
 
+/* ─── Helpers ─── */
 function bboxToGrid(bbox: number[], imageWidth = 640, imageHeight = 640): string {
   const cols = ['A', 'B', 'C', 'D', 'E']
   const rows = ['1', '2', '3', '4', '5', '6', '7', '8']
@@ -40,12 +42,32 @@ function bboxToGrid(bbox: number[], imageWidth = 640, imageHeight = 640): string
 }
 
 function confidenceColor(conf: number): string {
-  if (conf >= 0.8) return '#ff3b3b'
-  if (conf >= 0.6) return '#ff8c3b'
-  if (conf >= 0.4) return '#ffd03b'
+  if (conf >= 0.7) return '#ff3b3b'
+  if (conf >= 0.5) return '#ff8c3b'
+  if (conf >= 0.3) return '#ffd03b'
   return '#888'
 }
 
+function estimateDistance(bbox: number[]): { label: string; color: string } {
+  const w = bbox[2] - bbox[0]
+  const h = bbox[3] - bbox[1]
+  const area = w * h
+  if (area > 5000) return { label: 'CLOSE', color: '#22c55e' }
+  if (area > 1500) return { label: 'MED', color: '#ffd03b' }
+  return { label: 'FAR', color: '#ff8c3b' }
+}
+
+function classificationColor(cls: string): string {
+  switch (cls) {
+    case 'WAVING': return '#ff3b3b'
+    case 'LYING_DOWN': return '#ff8c3b'
+    case 'STATIONARY': return '#ffd03b'
+    case 'OBSCURED': return '#888'
+    default: return '#3b8bff'
+  }
+}
+
+/* ─── App ─── */
 function App() {
   const [detections, setDetections] = useState<Detection[]>([])
   const [briefing, setBriefing] = useState<string>('')
@@ -59,6 +81,7 @@ function App() {
   const gridCols = ['A', 'B', 'C', 'D', 'E']
   const gridRows = ['1', '2', '3', '4', '5', '6', '7', '8']
 
+  /* ─── WebSocket ─── */
   useEffect(() => {
     const socket = new WebSocket('ws://localhost:8000/stream')
 
@@ -92,7 +115,7 @@ function App() {
     return () => socket.close()
   }, [])
 
-  // Draw overhead map on canvas
+  /* ─── Overhead Map Canvas ─── */
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -166,12 +189,15 @@ function App() {
     })
   }, [detections, coverage])
 
+  /* ─── Sorted Detections ─── */
   const sortedDetections = [...detections].sort(
     (a, b) => b.confidence - a.confidence
   )
 
+  /* ─── Render ─── */
   return (
     <div className="aria-root">
+      {/* Header */}
       <header className="aria-header">
         <div className="aria-header-left">
           <div className="aria-logo">ARIA</div>
@@ -185,10 +211,15 @@ function App() {
           <div className="aria-coverage-badge">
             COVERAGE {coveragePercent}%
           </div>
+          <div className="aria-det-count">
+            {detections.length} TARGETS
+          </div>
         </div>
       </header>
 
+      {/* Main Grid */}
       <div className="aria-grid">
+        {/* Left — Video Feed + Detections */}
         <div className="aria-panel video-panel">
           <div className="panel-header">
             <span className="panel-label">LIVE FEED</span>
@@ -202,22 +233,41 @@ function App() {
             />
           </div>
 
+          {/* Detection list */}
           <div className="detection-list">
-            {sortedDetections.map((det, i) => (
-              <div key={det.id} className="detection-item" style={{ borderLeftColor: confidenceColor(det.confidence) }}>
-                <span className="det-priority">P{i + 1}</span>
-                <span className="det-id">ID-{det.id}</span>
-                <span className="det-grid">{bboxToGrid(det.bbox)}</span>
-                <span className="det-class" style={{ color: confidenceColor(det.confidence) }}>
-                  {det.classification || 'HUMAN'}
-                </span>
-                <span className="det-conf">{(det.confidence * 100).toFixed(0)}%</span>
-              </div>
-            ))}
+            <div className="detection-header">
+              <span className="dh-pri">PRI</span>
+              <span className="dh-id">ID</span>
+              <span className="dh-grid">GRID</span>
+              <span className="dh-class">STATUS</span>
+              <span className="dh-dist">DIST</span>
+              <span className="dh-conf">CONF</span>
+            </div>
+            {sortedDetections.map((det, i) => {
+              const dist = estimateDistance(det.bbox)
+              return (
+                <div
+                  key={det.id}
+                  className="detection-item"
+                  style={{ borderLeftColor: confidenceColor(det.confidence) }}
+                >
+                  <span className="det-priority">P{i + 1}</span>
+                  <span className="det-id">ID-{det.id}</span>
+                  <span className="det-grid">{bboxToGrid(det.bbox)}</span>
+                  <span className="det-class" style={{ color: classificationColor(det.classification || 'HUMAN') }}>
+                    {det.classification || 'HUMAN'}
+                  </span>
+                  <span className="det-dist" style={{ color: dist.color }}>{dist.label}</span>
+                  <span className="det-conf">{(det.confidence * 100).toFixed(0)}%</span>
+                </div>
+              )
+            })}
           </div>
         </div>
 
+        {/* Right — Map + Briefing */}
         <div className="aria-right">
+          {/* Overhead Map */}
           <div className="aria-panel map-panel">
             <div className="panel-header">
               <span className="panel-label">OVERHEAD MAP</span>
@@ -231,11 +281,12 @@ function App() {
             />
           </div>
 
+          {/* Briefing Panel */}
           <div className="aria-panel briefing-panel">
             <div className="panel-header">
               <span className="panel-label">RESCUE BRIEFING</span>
               <span className="panel-meta">
-                {briefingTime ? `Updated ${briefingTime}` : 'Awaiting report'}
+                {briefingTime ? `Updated ${new Date(parseFloat(briefingTime) * 1000).toLocaleTimeString()}` : 'Awaiting report'}
               </span>
             </div>
             <div className="briefing-content">

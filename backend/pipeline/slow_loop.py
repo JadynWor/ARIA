@@ -3,6 +3,8 @@ import base64
 import httpx
 import cv2
 
+# ollama briefing slow loop — 
+# runs every 10 seconds to generate situation briefings based on latest frame and detections
 def slow_loop(shared_state):
     ollama_url = "http://localhost:11434/api/generate"
     
@@ -49,6 +51,8 @@ End with:
 HAZARDS: [any visible hazards]
 RECOMMENDED NEXT ACTION: [what the drone should do next]"""
 
+    
+        print(f"[SLOW LOOP] Sending request to Ollama with {len(snapshot['detections'])} detections...")    
         try:
             response = httpx.post(
                 ollama_url,
@@ -65,4 +69,5 @@ RECOMMENDED NEXT ACTION: [what the drone should do next]"""
             shared_state.update_briefing(briefing)
             
         except Exception as e:
+            print(f"[SLOW LOOP] Error: {e}")
             shared_state.update_briefing(f"Briefing unavailable — Ollama error: {str(e)}")

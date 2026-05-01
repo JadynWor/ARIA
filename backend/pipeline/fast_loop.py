@@ -6,7 +6,8 @@ import supervision as sv
 from .classify import classify_detections
 
 def fast_loop(shared_state, video_path):
-  model = YOLO('models/heridal_v2_best.pt')
+  #model = YOLO('models/heridal_v2_best.pt') v1 - 4/30/2026
+  model = YOLO('models/combined_best.pt') # v2 - 6/5/2026
   cap = cv2.VideoCapture(video_path)
   tracker = sv.ByteTrack()
   
@@ -54,8 +55,8 @@ def fast_loop(shared_state, video_path):
       shared_state.update_coverage(cell)
       label = det.get("classification", "HUMAN")
       conf = det["confidence"]
-      cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
-      cv2.putText(frame, f"P{det['id']} {label} {conf:.0%}", (x1, y1 - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+      cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 4)
+      cv2.putText(frame, f"P{det['id']} {conf:.0%}", (x1, y1 - 20), cv2.FONT_HERSHEY_SIMPLEX, 2.0, (0, 255, 0), 4)
 
     shared_state.update_frame_and_detections(frame, detection_list)
     time.sleep(0.033)

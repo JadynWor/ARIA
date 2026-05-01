@@ -12,7 +12,6 @@ interface Detection {
 
 interface FrameMessage {
   type: 'frame'
-  image: string
   detections: Detection[]
 }
 
@@ -30,7 +29,6 @@ interface CoverageMessage {
 
 type WSMessage = FrameMessage | BriefingMessage | CoverageMessage
 
-// Convert bbox center to grid cell
 function bboxToGrid(bbox: number[], imageWidth = 640, imageHeight = 640): string {
   const cols = ['A', 'B', 'C', 'D', 'E']
   const rows = ['1', '2', '3', '4', '5', '6', '7', '8']
@@ -56,7 +54,6 @@ function App() {
   const [coverage, setCoverage] = useState<string[]>([])
   const [coveragePercent, setCoveragePercent] = useState<number>(0)
   const [connected, setConnected] = useState<boolean>(false)
-  const [frameImage, setFrameImage] = useState<string>('')
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   const gridCols = ['A', 'B', 'C', 'D', 'E']
@@ -75,7 +72,6 @@ function App() {
 
       if (data.type === 'frame') {
         setDetections(data.detections)
-        setFrameImage(data.image)
       }
 
       if (data.type === 'briefing') {
@@ -111,7 +107,6 @@ function App() {
     ctx.fillStyle = '#0a0f14'
     ctx.fillRect(0, 0, w, h)
 
-    // Draw grid cells
     gridCols.forEach((col, ci) => {
       gridRows.forEach((row, ri) => {
         const cellId = `${col}${row}`
@@ -132,7 +127,6 @@ function App() {
       })
     })
 
-    // Draw detections on map using bbox coordinates
     detections.forEach((det) => {
       if (!det.bbox || det.bbox.length < 4) return
 
@@ -146,9 +140,7 @@ function App() {
       const cx = ci * cellW + cellW / 2
       const cy = ri * cellH + cellH / 2
       const color = confidenceColor(det.confidence)
-      const label = det.classification || 'DETECTED'
 
-      // Pulse ring
       ctx.beginPath()
       ctx.arc(cx, cy, 14, 0, Math.PI * 2)
       ctx.strokeStyle = color
@@ -157,19 +149,16 @@ function App() {
       ctx.stroke()
       ctx.globalAlpha = 1
 
-      // Detection dot
       ctx.beginPath()
       ctx.arc(cx, cy, 6, 0, Math.PI * 2)
       ctx.fillStyle = color
       ctx.fill()
 
-      // ID label
       ctx.fillStyle = '#fff'
       ctx.font = 'bold 10px "IBM Plex Mono", monospace'
       ctx.textAlign = 'center'
       ctx.fillText(`P${det.id}`, cx, cy - 18)
 
-      // Status label
       ctx.font = '8px "IBM Plex Mono", monospace'
       ctx.fillStyle = color
       ctx.fillText(`${(det.confidence * 100).toFixed(0)}%`, cx, cy + 24)
@@ -183,7 +172,6 @@ function App() {
 
   return (
     <div className="aria-root">
-      {/* Header */}
       <header className="aria-header">
         <div className="aria-header-left">
           <div className="aria-logo">ARIA</div>
@@ -200,30 +188,20 @@ function App() {
         </div>
       </header>
 
-      {/* Main Grid */}
       <div className="aria-grid">
-        {/* Left — Video Feed */}
         <div className="aria-panel video-panel">
           <div className="panel-header">
             <span className="panel-label">LIVE FEED</span>
             <span className="panel-meta">{detections.length} detections</span>
           </div>
           <div className="video-container">
-            {frameImage && frameImage !== 'base64_fake_image_data' ? (
-              <img src={`data:image/jpeg;base64,${frameImage}`} alt="Drone feed" className="video-feed" />
-            ) : (
-              <div className="video-placeholder">
-                <div className="placeholder-grid">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="placeholder-cell" />
-                  ))}
-                </div>
-                <span>AWAITING VIDEO FEED</span>
-              </div>
-            )}
+            <img
+              src="http://localhost:8000/video_feed"
+              alt="Drone feed"
+              className="video-feed"
+            />
           </div>
 
-          {/* Detection list under video */}
           <div className="detection-list">
             {sortedDetections.map((det, i) => (
               <div key={det.id} className="detection-item" style={{ borderLeftColor: confidenceColor(det.confidence) }}>
@@ -239,9 +217,7 @@ function App() {
           </div>
         </div>
 
-        {/* Right — Map + Briefing stacked */}
         <div className="aria-right">
-          {/* Overhead Map */}
           <div className="aria-panel map-panel">
             <div className="panel-header">
               <span className="panel-label">OVERHEAD MAP</span>
@@ -255,7 +231,6 @@ function App() {
             />
           </div>
 
-          {/* Briefing Panel */}
           <div className="aria-panel briefing-panel">
             <div className="panel-header">
               <span className="panel-label">RESCUE BRIEFING</span>

@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 
 app = FastAPI()
 shared_state = SharedState()
-VIDEO_PATH = "data/sample.mp4"
+VIDEO_PATH = "data/Gaza_sample_vid.mp4"
 
 @app.on_event("startup")
 def startup_event():
@@ -27,7 +27,7 @@ def generate_frames():
     while True:
         snapshot = shared_state.get_snapshot()
         if snapshot["latest_frame"] is not None:
-            small = cv2.resize(snapshot["latest_frame"], (640, 480))
+            small = cv2.resize(snapshot["latest_frame"], (960, 720))
             _, buffer = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 70])
             frame_bytes = buffer.tobytes()
             yield (b'--frame\r\n'

@@ -11,7 +11,7 @@ from fastapi.responses import StreamingResponse
 
 app = FastAPI()
 shared_state = SharedState()
-VIDEO_PATH = "data/Gaza_sample_vid.mp4"
+VIDEO_PATH = "data/testrun3.mp4"
 
 @app.on_event("startup")
 def startup_event():

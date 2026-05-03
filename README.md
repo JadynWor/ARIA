@@ -58,7 +58,7 @@ MJPEG Stream ← FastAPI
 
 ### Quick Start
 ```bash
-git clone https://github.com/YOUR_USERNAME/ARIA.git
+git clone https://github.com/jadynwor/ARIA.git
 cd ARIA
 docker-compose up
 ```

@@ -39,10 +39,57 @@ def generate_frames():
                 sy1 = int(y1 * scale_y)
                 sx2 = int(x2 * scale_x)
                 sy2 = int(y2 * scale_y)
-                label = det.get("classification", "HUMAN")
                 conf = det["confidence"]
-                cv2.rectangle(small, (sx1, sy1), (sx2, sy2), (0, 255, 0), 2)
-                cv2.putText(small, f"P{det['id']} {conf:.0%}", (sx1, sy1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+                if conf >= 0.7:
+                    color = (0, 0, 255)
+                elif conf >= 0.5:
+                    color = (0, 165, 255)
+                else:
+                    color = (0, 255, 255)
+
+                cv2.rectangle(small, (sx1, sy1), (sx2, sy2), color, 2)
+                cv2.putText(small, f"P{det['id']} {conf:.0%}", (sx1, sy1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+            # Draw minimap overlay in top-right corner
+            map_size = 160
+            map_x = 960 - map_size - 10  # 10px padding from right
+            map_y = 10  # 10px from top
+            
+            # Semi-transparent dark background
+            overlay = small.copy()
+            cv2.rectangle(overlay, (map_x, map_y), (map_x + map_size, map_y + map_size), (10, 15, 20), -1)
+            cv2.addWeighted(overlay, 0.7, small, 0.3, 0, small)
+            
+            # Draw grid lines
+            cols, rows = 5, 8
+            cell_w = map_size // cols
+            cell_h = map_size // rows
+            for c in range(cols + 1):
+                x = map_x + c * cell_w
+                cv2.line(small, (x, map_y), (x, map_y + map_size), (255, 255, 255, 50), 1)
+            for r in range(rows + 1):
+                y = map_y + r * cell_h
+                cv2.line(small, (map_x, y), (map_x + map_size, y), (255, 255, 255, 50), 1)
+            
+            # Draw detection dots on minimap
+            h_orig, w_orig = frame.shape[:2]
+            for det in snapshot["detections"]:
+                bx1, by1, bx2, by2 = det["bbox"]
+                cx = (bx1 + bx2) / 2 / w_orig  # normalize 0-1
+                cy = (by1 + by2) / 2 / h_orig
+                dot_x = int(map_x + cx * map_size)
+                dot_y = int(map_y + cy * map_size)
+                conf = det["confidence"]
+                color = (0, 0, 255) if conf > 0.7 else (0, 165, 255) if conf > 0.5 else (0, 255, 255)
+
+                cv2.circle(small, (dot_x, dot_y), 4, color, -1)
+                cv2.circle(small, (dot_x, dot_y), 6, color, 1)
+            
+            # Minimap border
+            cv2.rectangle(small, (map_x, map_y), (map_x + map_size, map_y + map_size), (100, 100, 100), 1)
+            # Label
+            cv2.putText(small, "ARIA MAP", (map_x + 4, map_y + map_size - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (100, 100, 100), 1)
 
             _, buffer = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 70])
             frame_bytes = buffer.tobytes()

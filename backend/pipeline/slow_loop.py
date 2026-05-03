@@ -30,26 +30,17 @@ def slow_loop(shared_state):
         if not det_summary:
             det_summary = "No persons currently detected.\n"
         
-        prompt = f"""You are an aerial search and rescue analyst reviewing live drone footage.
+        prompt = f"""You are an aerial search and rescue analyst. Be concise.
 
 Current detections:
 {det_summary}
-Search coverage: {len(snapshot.get('searched', []))} grid cells searched.
+Coverage: {len(snapshot.get('searched', []))}/40 grid cells searched.
 
-Based on the drone image and detection data, generate a brief situation report in this exact format:
-
-ARIA SITUATION REPORT
-Active detections: [count] persons
-
-For each person, list in priority order:
-PRIORITY [n] — Person ID [id]
-Status: [assess from image - waving, stationary, lying down, or obscured]
-Confidence: [confidence]%
-Recommendation: [specific action for rescue team]
-
-End with:
-HAZARDS: [any visible hazards]
-RECOMMENDED NEXT ACTION: [what the drone should do next]"""
+Generate a brief situation report:
+SITUATION: [1 sentence summary]
+PRIORITY TARGETS: [list top 3 by confidence, one line each with ID, status, action]
+HAZARDS: [any visible hazards or "None detected"]
+NEXT ACTION: [what drone should do next]"""
 
     
         print(f"[SLOW LOOP] Sending request to Ollama with {len(snapshot['detections'])} detections...")    

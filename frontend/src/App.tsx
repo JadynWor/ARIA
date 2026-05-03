@@ -80,7 +80,21 @@ function App() {
 
   const gridCols = ['A', 'B', 'C', 'D', 'E']
   const gridRows = ['1', '2', '3', '4', '5', '6', '7', '8']
+  const [missionTime, setMissionTime] = useState<number>(0)
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMissionTime(prev => prev + 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  function formatTime(seconds: number): string {
+    const h = Math.floor(seconds / 3600)
+    const m = Math.floor((seconds % 3600) / 60)
+    const s = seconds % 60
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
   /* ─── WebSocket ─── */
   useEffect(() => {
     const socket = new WebSocket('ws://localhost:8000/stream')
@@ -150,43 +164,7 @@ function App() {
       })
     })
 
-    detections.forEach((det) => {
-      if (!det.bbox || det.bbox.length < 4) return
-
-      const grid = bboxToGrid(det.bbox)
-      const col = grid[0]
-      const row = grid.slice(1)
-      const ci = gridCols.indexOf(col)
-      const ri = gridRows.indexOf(row)
-      if (ci === -1 || ri === -1) return
-
-      const cx = ci * cellW + cellW / 2
-      const cy = ri * cellH + cellH / 2
-      const color = confidenceColor(det.confidence)
-
-      ctx.beginPath()
-      ctx.arc(cx, cy, 14, 0, Math.PI * 2)
-      ctx.strokeStyle = color
-      ctx.lineWidth = 1
-      ctx.globalAlpha = 0.3
-      ctx.stroke()
-      ctx.globalAlpha = 1
-
-      ctx.beginPath()
-      ctx.arc(cx, cy, 6, 0, Math.PI * 2)
-      ctx.fillStyle = color
-      ctx.fill()
-
-      ctx.fillStyle = '#fff'
-      ctx.font = 'bold 10px "IBM Plex Mono", monospace'
-      ctx.textAlign = 'center'
-      ctx.fillText(`P${det.id}`, cx, cy - 18)
-
-      ctx.font = '8px "IBM Plex Mono", monospace'
-      ctx.fillStyle = color
-      ctx.fillText(`${(det.confidence * 100).toFixed(0)}%`, cx, cy + 24)
-      ctx.textAlign = 'start'
-    })
+    
   }, [detections, coverage])
 
   /* ─── Sorted Detections ─── */
@@ -207,6 +185,9 @@ function App() {
           <div className={`aria-status ${connected ? 'connected' : 'disconnected'}`}>
             <span className="status-dot"></span>
             {connected ? 'LIVE' : 'DISCONNECTED'}
+          </div>
+          <div className="aria-mission-timer">
+            MISSION {formatTime(missionTime)}
           </div>
           <div className="aria-coverage-badge">
             COVERAGE {coveragePercent}%
@@ -270,7 +251,7 @@ function App() {
           {/* Overhead Map */}
           <div className="aria-panel map-panel">
             <div className="panel-header">
-              <span className="panel-label">OVERHEAD MAP</span>
+              <span className="panel-label">MISSION COVERAGE</span>
               <span className="panel-meta">{coveragePercent}% searched</span>
             </div>
             <canvas

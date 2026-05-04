@@ -48,7 +48,7 @@ NEXT ACTION: [what drone should do next]"""
             response = httpx.post(
                 ollama_url,
                 json={
-                    "model": "gemma3:4b",
+                    "model": "aria-sar",
                     "prompt": prompt,
                     "images": [frame_base64],
                     "stream": False

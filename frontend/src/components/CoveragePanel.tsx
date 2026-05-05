@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Detection, COLS, ROWS, bboxToGrid } from '../utils/helpers'
+import { type Detection, COLS, ROWS, bboxToGrid } from '../utils/helpers'
 
 function heatClass(count: number): string {
   if (count >= 6) return 'heat-high'

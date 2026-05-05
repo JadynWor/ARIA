@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { bboxToGrid, Classification, Detection, Briefing, HistoryEntry } from '../utils/helpers'
+import { bboxToGrid, type Classification, type Detection, type Briefing, type HistoryEntry } from '../utils/helpers'
 
 export function useLiveFeed() {
   const [connected, setConnected] = useState(false)

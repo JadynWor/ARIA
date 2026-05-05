@@ -1,5 +1,5 @@
 import {
-  Detection, TONE, CLASS_LABEL, STATUS_LABEL,
+  type Detection, TONE, CLASS_LABEL, STATUS_LABEL,
   CLASSIFICATION_WEIGHTS, bboxToGrid, estimateDistance, recommendedAction,
 } from '../utils/helpers'
 

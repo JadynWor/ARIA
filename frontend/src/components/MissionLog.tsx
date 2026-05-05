@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { HistoryEntry, CLASS_SHORT } from '../utils/helpers'
+import { type HistoryEntry, CLASS_SHORT } from '../utils/helpers'
 
 export function MissionLog({
   history,

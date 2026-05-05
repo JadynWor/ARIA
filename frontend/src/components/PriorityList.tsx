@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { Detection, TONE, CLASS_SHORT } from '../utils/helpers'
+import { type Detection, TONE, CLASS_SHORT } from '../utils/helpers'
 
 function PriorityRow({
   d,

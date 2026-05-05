@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
-import { VideoMode } from './utils/helpers'
+import { type VideoMode } from './utils/helpers'
 import { useLiveFeed } from './hooks/useLiveFeed'
 import { Header } from './components/Header'
 import { VideoFeed } from './components/VideoFeed'

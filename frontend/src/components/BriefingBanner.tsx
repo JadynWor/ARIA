@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Briefing, fmtTime, parseBriefing } from '../utils/helpers'
+import { type Briefing, fmtTime, parseBriefing } from '../utils/helpers'
 
 const LANGUAGES: { code: string; full: string }[] = [
   { code: 'EN', full: 'English' },

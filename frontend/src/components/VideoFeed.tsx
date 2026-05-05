@@ -1,4 +1,4 @@
-import { Detection, IMG_W, IMG_H, TONE } from '../utils/helpers'
+import { type Detection, IMG_W, IMG_H, TONE } from '../utils/helpers'
 
 export function VideoFeed({
   detections,

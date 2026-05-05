@@ -10,6 +10,7 @@ class SharedState:
     self._briefing = ""
     self._timestamp = 0
     self._searched_cells = set()
+    self._language = "English"
 
   def get_snapshot(self):
     with self._lock:
@@ -20,9 +21,14 @@ class SharedState:
         "briefing": self._briefing,
         "timestamp": self._timestamp,
         "searched": list(self._searched_cells),
-        "coverage": int(len(self._searched_cells) / 40 * 100)  # Assuming 40 total cells for coverage calculation
+        "coverage": int(len(self._searched_cells) / 40 * 100),  # Assuming 40 total cells for coverage calculation
+        "language": self._language  
       }
   
+  def update_language(self, language):
+    with self._lock:
+      self._language = language
+
   def update_homography(self, homography):
     with self._lock:
       self._homography = homography

@@ -194,3 +194,8 @@ def stop_video():
         shared_state._searched_cells = set()
         shared_state._briefing = ""
     return {"status": "stopped"}
+
+@app.post("/set_language")
+def set_language(language: str = "English"):
+    shared_state.update_language(language)
+    return {"status": "language updated", "language": language}

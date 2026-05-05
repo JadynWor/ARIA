@@ -50,7 +50,6 @@ NEXT ACTION: [what drone should do next]"""
                 json={
                     "model": "aria-sar",
                     "prompt": prompt,
-                    "images": [frame_base64],
                     "stream": False
                 },
                 timeout=120.0

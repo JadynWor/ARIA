@@ -1,5 +1,10 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 import asyncio
+import ctypes
+import pathlib
+import shutil
 import threading
 import time
 import cv2
@@ -7,17 +12,61 @@ from state import SharedState
 from pipeline.fast_loop import fast_loop
 from pipeline.slow_loop import slow_loop
 from pipeline.medium_loop import medium_loop
-from fastapi.responses import StreamingResponse
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 shared_state = SharedState()
-VIDEO_PATH = "data/testrun3.mp4"
+DEMO_VIDEO = "data/testrun3.mp4"
+_fast_loop_thread: threading.Thread | None = None
+
+def _kill_thread(t: threading.Thread):
+    if t and t.is_alive() and t.ident:
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(
+            ctypes.c_ulong(t.ident), ctypes.py_object(SystemExit)
+        )
+        t.join(timeout=3)
+
+def start_fast_loop(video_path: str):
+    global _fast_loop_thread
+    _kill_thread(_fast_loop_thread)
+    shared_state.update_frame_and_detections(None, [])
+    with shared_state._lock:
+        shared_state._searched_cells = set()
+        shared_state._briefing = ""
+    _fast_loop_thread = threading.Thread(
+        target=fast_loop, args=(shared_state, video_path), daemon=True
+    )
+    _fast_loop_thread.start()
 
 @app.on_event("startup")
 def startup_event():
-    threading.Thread(target=fast_loop, args=(shared_state, VIDEO_PATH), daemon=True).start()
-    threading.Thread(target=slow_loop, args=(shared_state,), daemon=True).start() 
+    #clear stale state on startup
+    shared_state.update_frame_and_detections(None, [])
+    with shared_state._lock:
+        shared_state._searched_cells = set()
+        shared_state._briefing = ""
+    threading.Thread(target=slow_loop, args=(shared_state,), daemon=True).start()
     threading.Thread(target=medium_loop, args=(shared_state,), daemon=True).start()
+
+@app.post("/upload_video")
+async def upload_video(file: UploadFile = File(...)):
+    dest = pathlib.Path("data") / file.filename
+    with open(dest, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    start_fast_loop(str(dest))
+    return {"status": "ok", "path": str(dest)}
+
+@app.post("/start_demo")
+def start_demo():
+    start_fast_loop(DEMO_VIDEO)
+    return {"status": "ok", "path": DEMO_VIDEO}
 
 @app.get("/")
 def read_root():
@@ -134,3 +183,14 @@ async def streamDrone(websocket: WebSocket):
             await asyncio.sleep(0.2)
     except Exception as e:
         print(f"WebSocket closed: {e}")
+
+@app.post("/stop_video")
+def stop_video():
+    global _fast_loop_thread
+    _kill_thread(_fast_loop_thread)
+    _fast_loop_thread = None
+    shared_state.update_frame_and_detections(None, [])
+    with shared_state._lock:
+        shared_state._searched_cells = set()
+        shared_state._briefing = ""
+    return {"status": "stopped"}

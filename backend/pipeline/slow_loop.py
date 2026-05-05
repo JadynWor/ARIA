@@ -29,11 +29,11 @@ You are an aerial search and rescue analyst. Be concise.
 Current detections:
 {det_summary}
 Coverage: {len(snapshot.get('searched', []))}/40 grid cells searched.
-Generate a brief situation report:
-SITUATION: [1 sentence summary]
-PRIORITY TARGETS: [list top 3 by confidence, one line each with ID, status, action]
-HAZARDS: [any visible hazards or "None detected"]
-NEXT ACTION: [what drone should do next]"""
+
+Generate a situation report in this exact format:
+SITUATION: [1 sentence summary of current state]
+KEY CHANGES: [what changed since last scan — new detections, movements, priority shifts]
+NEXT ACTION: [specific instruction for drone operator]"""
 
     
         print(f"[SLOW LOOP] Sending request to Ollama with {len(snapshot['detections'])} detections...")    

@@ -1280,6 +1280,234 @@ button {
   background: var(--bg-elevated);
 }
 
+/* ─── Left column (priority + mission log) ─────────────────────────────── */
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.left-column .panel-priority {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ─── Confidence trend arrows (Feature 7) ──────────────────────────────── */
+
+.prio-trend {
+  font-size: 13px;
+  min-width: 14px;
+  text-align: center;
+  line-height: 1;
+}
+
+.trend-up   { color: var(--sage); }
+.trend-down { color: var(--coral); }
+.trend-flat { color: var(--cream-faint); }
+
+.prio-row {
+  grid-template-columns: 14px 1fr auto auto auto;
+}
+
+/* ─── Heat map cells (Feature 1) ───────────────────────────────────────── */
+
+.cov-cell.heat-low {
+  background: rgba(86, 166, 138, 0.25);
+  border-color: rgba(86, 166, 138, 0.5);
+}
+
+.cov-cell.heat-low::after {
+  background: var(--sage);
+  opacity: 0.5;
+}
+
+.cov-cell.heat-med {
+  background: rgba(232, 160, 56, 0.3);
+  border-color: rgba(232, 160, 56, 0.6);
+}
+
+.cov-cell.heat-med::after {
+  background: var(--amber);
+  opacity: 0.7;
+}
+
+.cov-cell.heat-high {
+  background: rgba(232, 144, 48, 0.5);
+  border-color: #e89030;
+}
+
+.cov-cell.heat-high::after {
+  background: #e89030;
+  opacity: 0.9;
+}
+
+/* ─── Critical alert flash (Feature 5) ─────────────────────────────────── */
+
+.critical-flash {
+  animation: critical-glow 2s ease-out forwards;
+}
+
+@keyframes critical-glow {
+  0%   { box-shadow: inset 0 0 40px rgba(224, 82, 82, 0.6), 0 0 30px rgba(224, 82, 82, 0.3); }
+  50%  { box-shadow: inset 0 0 20px rgba(224, 82, 82, 0.3), 0 0 15px rgba(224, 82, 82, 0.15); }
+  100% { box-shadow: inset 0 0 0 transparent, 0 0 0 transparent; }
+}
+
+/* ─── Language buttons (Feature 4) ─────────────────────────────────────── */
+
+.lang-group {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+.lang-btn {
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--cream-faint);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  line-height: 1.4;
+}
+
+.lang-btn:hover {
+  color: var(--cream);
+  border-color: var(--border-strong);
+}
+
+.lang-btn.active {
+  background: var(--amber);
+  color: var(--bg-deep);
+  border-color: var(--amber);
+  font-weight: 600;
+}
+
+/* ─── Mission log (Feature 3) ──────────────────────────────────────────── */
+
+.panel-mission-log {
+  flex-shrink: 0;
+}
+
+.mission-log-header {
+  cursor: pointer;
+}
+
+.mission-log-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chevron-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  font-size: 11px;
+  color: var(--amber);
+  transition: transform 0.2s ease;
+}
+
+.chevron-sm.right { transform: rotate(-90deg); }
+.chevron-sm.down  { transform: rotate(0deg);   }
+
+.mission-log-body {
+  max-height: 150px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.mission-log-empty {
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--cream-faint);
+  text-align: center;
+}
+
+.mission-log-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--cream-muted);
+  transition: background 0.15s;
+}
+
+.mission-log-row:hover {
+  background: var(--bg-elevated);
+}
+
+.ml-id    { color: var(--cream); font-weight: 500; min-width: 36px; }
+.ml-sep   { color: var(--cream-faint); }
+.ml-grid  { color: var(--amber); min-width: 20px; }
+.ml-class { min-width: 32px; color: var(--cream-dim); }
+.ml-ago   { color: var(--cream-faint); margin-left: auto; }
+
+/* ─── Subject reasoning (Feature 2) ────────────────────────────────────── */
+
+.subject-reasoning {
+  margin-top: 6px;
+  padding: 14px;
+  background: rgba(86, 166, 138, 0.06);
+  border: 1px solid rgba(86, 166, 138, 0.2);
+  border-left: 2px solid var(--sage);
+  border-radius: 2px;
+}
+
+.subject-reasoning-label {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--sage);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.subject-reasoning-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--cream-muted);
+  letter-spacing: 0.02em;
+}
+
+/* ─── Drone guidance (Feature 8) ───────────────────────────────────────── */
+
+.cov-guidance {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cov-guidance-label {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.cov-guidance-text {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--cream);
+  line-height: 1.4;
+}
+
 /* ─── Responsive ────────────────────────────────────────────────────────── */
 
 @media (max-width: 1400px) {

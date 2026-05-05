@@ -178,7 +178,8 @@ async def streamDrone(websocket: WebSocket):
             await websocket.send_json({
                 "type": "coverage",
                 "searched": snapshot["searched"],
-                "percentage": snapshot["coverage"]
+                "percentage": snapshot["coverage"],
+                "language": snapshot.get("language", "English")
             })
             await asyncio.sleep(0.2)
     except Exception as e:
@@ -199,3 +200,22 @@ def stop_video():
 def set_language(language: str = "English"):
     shared_state.update_language(language)
     return {"status": "language updated", "language": language}
+
+@app.get("/status")
+def status():
+    snapshot = shared_state.get_snapshot()
+    return {
+        "status": "running",
+        "pipeline": {
+            "yolo": "combined_best.pt loaded",
+            "efficientnet": "efficientnet_distress.pt loaded",
+            "gemma": "aria-sar via Ollama",
+            "tracking": "ByteTrack active"
+        },
+        "current": {
+            "detections": len(snapshot["detections"]),
+            "coverage": snapshot["coverage"],
+            "language": snapshot.get("language", "English"),
+            "has_briefing": bool(snapshot["briefing"])
+        }
+    }

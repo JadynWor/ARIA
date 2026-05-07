@@ -140,11 +140,11 @@ def generate_frames():
             # Label
             cv2.putText(small, "ARIA MAP", (map_x + 4, map_y + map_size - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (100, 100, 100), 1)
 
-            _, buffer = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 70])
+            _, buffer = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 85])
             frame_bytes = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-        time.sleep(0.1)
+        time.sleep(0.05)
 
 @app.get("/video_feed")
 def video_feed():

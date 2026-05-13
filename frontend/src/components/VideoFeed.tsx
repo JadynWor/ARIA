@@ -18,7 +18,7 @@ export function VideoFeed({
         <img
           src="http://localhost:8000/video_feed"
           alt="Drone feed"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
         />
 
         {selected && (() => {

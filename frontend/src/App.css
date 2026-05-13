@@ -34,9 +34,30 @@
   --tone-station:   var(--yellow);
   --tone-obscure:   var(--cream-dim);
 
+  --logo-stroke: var(--cream);
+
   --font-sans:  'IBM Plex Sans', system-ui, sans-serif;
   --font-mono:  'IBM Plex Mono', ui-monospace, monospace;
   --font-serif: 'IBM Plex Serif', Georgia, serif;
+}
+
+[data-theme="light"] {
+  --bg-deep:        #f0e9d8;
+  --bg-surface:     #e8dec8;
+  --bg-elevated:    #fdf8ec;
+  --bg-feed:        #1a2030;
+  --bg-card:        #f6efde;
+
+  --border:         #c8b896;
+  --border-strong:  #a89878;
+  --border-soft:    #ddd0b0;
+
+  --cream:          #1a2438;
+  --cream-muted:    #3d4f68;
+  --cream-dim:      #5a6b85;
+  --cream-faint:    #8a9aab;
+
+  --logo-stroke:    var(--cream);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -102,7 +123,7 @@ button {
   align-items: center;
   gap: 32px;
   padding: 14px 28px;
-  background: rgba(13, 23, 48, 0.6);
+  background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
   position: relative;
 }
@@ -121,9 +142,6 @@ button {
 .logo-mark {
   width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
-  background: var(--bg-card);
-  border: 1px solid var(--border-strong);
-  border-radius: 4px;
 }
 
 .brand-text h1 {
@@ -917,7 +935,7 @@ button {
 /* ─── Briefing banner ───────────────────────────────────────────────────── */
 
 .briefing-banner {
-  background: linear-gradient(180deg, var(--bg-surface) 0%, #0a1530 100%);
+  background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-elevated) 100%);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   margin: 6px 12px 0;
@@ -943,7 +961,7 @@ button {
 }
 
 .briefing-banner.fresh {
-  background: linear-gradient(180deg, #102040 0%, #0a1530 100%);
+  background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-surface) 100%);
 }
 
 .briefing-banner.awaiting {
@@ -1507,6 +1525,66 @@ button {
   color: var(--cream);
   line-height: 1.4;
 }
+
+/* ─── Theme transition ──────────────────────────────────────────────────── */
+
+.aria-app, .panel, .feed-container, .briefing-banner, .aria-footer, .aria-header,
+.cov-cell, .prio-row, .video-selector, .video-selector-drop, .panel-mission-log,
+.subject-action, .subject-reasoning, .cov-guidance {
+  transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* ─── Theme toggle ─────────────────────────────────────────────────────── */
+
+.theme-toggle {
+  width: 52px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0;
+  background: var(--bg-card);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.2s, background 0.3s;
+}
+
+.theme-toggle:hover { border-color: var(--amber-soft); }
+
+.theme-toggle-track {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px;
+  height: 100%;
+}
+
+.theme-toggle-track svg {
+  width: 12px;
+  height: 12px;
+  color: var(--cream-faint);
+  z-index: 1;
+  flex-shrink: 0;
+  transition: color 0.3s ease;
+}
+
+.theme-toggle.light .theme-toggle-track svg:first-child { color: var(--amber); }
+.theme-toggle.dark  .theme-toggle-track svg:last-child  { color: var(--amber); }
+
+.theme-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  background: var(--amber);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(232, 160, 56, 0.5);
+  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.theme-toggle.dark  .theme-toggle-thumb { transform: translateX(0); }
+.theme-toggle.light .theme-toggle-thumb { transform: translateX(26px); }
 
 /* ─── Responsive ────────────────────────────────────────────────────────── */
 

@@ -1,18 +1,19 @@
 import { fmtTime } from '../utils/helpers'
+import { ThemeToggle } from './ThemeToggle'
+import { useTheme } from '../hooks/useTheme'
 
 export function Header({ connected, tick, onChangeVideo }: { connected: boolean; tick: number; onChangeVideo?: () => void }) {
+  const { theme, toggle } = useTheme()
+
   return (
     <header className="aria-header">
       <div className="header-brand">
         <div className="logo-mark" aria-hidden>
-          <svg viewBox="0 0 32 32" width="28" height="28">
-            <circle cx="16" cy="16" r="14" fill="none" stroke="var(--amber)" strokeWidth="1.5" />
-            <circle cx="16" cy="16" r="9"  fill="none" stroke="var(--amber)" strokeWidth="1" opacity="0.5" />
-            <circle cx="16" cy="16" r="2.5" fill="var(--amber-hot)" />
-            <line x1="16" y1="2"  x2="16" y2="7"  stroke="var(--amber)" strokeWidth="1.5" />
-            <line x1="16" y1="25" x2="16" y2="30" stroke="var(--amber)" strokeWidth="1.5" />
-            <line x1="2"  y1="16" x2="7"  y2="16" stroke="var(--amber)" strokeWidth="1.5" />
-            <line x1="25" y1="16" x2="30" y2="16" stroke="var(--amber)" strokeWidth="1.5" />
+          <svg viewBox="0 0 32 32" width="28" height="28" fill="none">
+            <path d="M6 27 L16 5 L26 27" stroke="var(--logo-stroke)" strokeWidth="2.2" strokeLinecap="square" strokeLinejoin="miter" />
+            <line x1="11" y1="19" x2="21" y2="19" stroke="var(--logo-stroke)" strokeWidth="1.6" />
+            <line x1="12.5" y1="22" x2="19.5" y2="22" stroke="var(--logo-stroke)" strokeWidth="1.2" opacity="0.55" />
+            <circle cx="16" cy="14.5" r="1.6" fill="var(--amber-hot)" />
           </svg>
         </div>
         <div className="brand-text">
@@ -30,6 +31,7 @@ export function Header({ connected, tick, onChangeVideo }: { connected: boolean;
         {onChangeVideo && (
           <button className="change-video-btn mono" onClick={onChangeVideo}>CHANGE VIDEO</button>
         )}
+        <ThemeToggle theme={theme} onToggle={toggle} />
         <div className={`live ${connected ? 'on' : 'off'}`}>
           <span className="live-dot" />
           <span className="live-label">{connected ? 'LIVE' : 'CONNECTING'}</span>

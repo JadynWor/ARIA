@@ -72,6 +72,22 @@ def start_demo():
 def read_root():
     return {"status": "ARIA running"}
 
+# Replace solid rectangles with corner-only markers
+def draw_corners(img, x1, y1, x2, y2, color, length=15, thickness=2):
+    # Top-left
+    cv2.line(img, (x1, y1), (x1 + length, y1), color, thickness)
+    cv2.line(img, (x1, y1), (x1, y1 + length), color, thickness)
+    # Top-right
+    cv2.line(img, (x2, y1), (x2 - length, y1), color, thickness)
+    cv2.line(img, (x2, y1), (x2, y1 + length), color, thickness)
+    # Bottom-left
+    cv2.line(img, (x1, y2), (x1 + length, y2), color, thickness)
+    cv2.line(img, (x1, y2), (x1, y2 - length), color, thickness)
+    # Bottom-right
+    cv2.line(img, (x2, y2), (x2 - length, y2), color, thickness)
+    cv2.line(img, (x2, y2), (x2, y2 - length), color, thickness)
+
+
 def generate_frames():
     while True:
         snapshot = shared_state.get_snapshot()
@@ -97,10 +113,10 @@ def generate_frames():
                 else:
                     color = (0, 255, 255)
 
-                cv2.rectangle(small, (sx1, sy1), (sx2, sy2), color, 2)
-                cv2.putText(small, f"P{det['id']} {conf:.0%}", (sx1, sy1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
-            # Draw minimap overlay in top-right corner
+                #cv2.rectangle(small, (sx1, sy1), (sx2, sy2), color, 2)
+                draw_corners(small, sx1, sy1, sx2, sy2, color)
+                cv2.putText(small, f"#{det['id']} {conf:.0%}", (sx1, sy1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                
             map_size = 160
             map_x = 960 - map_size - 10  # 10px padding from right
             map_y = 10  # 10px from top
@@ -140,11 +156,11 @@ def generate_frames():
             # Label
             cv2.putText(small, "ARIA MAP", (map_x + 4, map_y + map_size - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (100, 100, 100), 1)
 
-            _, buffer = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 85])
+            _, buffer = cv2.imencode('.jpg', small, [cv2.IMWRITE_JPEG_QUALITY, 90])
             frame_bytes = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-        time.sleep(0.05)
+        time.sleep(0.033)
 
 @app.get("/video_feed")
 def video_feed():

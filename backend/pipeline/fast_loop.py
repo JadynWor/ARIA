@@ -7,9 +7,16 @@ from .classify import classify_detections
 
 def fast_loop(shared_state, video_path):
   #model = YOLO('models/heridal_v2_best.pt') v1 - 4/30/2026
-  model = YOLO('models/combined_best.pt') # v2 - 6/5/2026
+  model = YOLO('models/combined_best.pt') # v2 - 5/1/2026
+  model.to("cuda") # ensure model is on GPU if available
+  print(f"[FAST LOOP] Device: {model.device}")
   cap = cv2.VideoCapture(video_path)
-  tracker = sv.ByteTrack()
+  tracker = sv.ByteTrack(
+      track_activation_threshold=0.2,  # lower = keep more tracks
+    lost_track_buffer=60,            # keep lost tracks for 60 frames (~2 sec)
+    minimum_matching_threshold=0.7,  # less strict matching
+    frame_rate=30
+  )
   
   while True:
     ret, frame = cap.read()
@@ -17,7 +24,8 @@ def fast_loop(shared_state, video_path):
       cap.set(cv2.CAP_PROP_POS_FRAMES, 0)  # loop video
       continue
     
-    results = model(frame)
+    # enable half precision for faster inference on compatible GPUs (optional) - only doing for demo purposes, can remove for better accuracy if needed
+    results = model(frame, half=True, conf=0.15)  # adjust confidence threshold as needed
     
     # Convert YOLO results to supervision Detections
     detections = sv.Detections.from_ultralytics(results[0])
@@ -55,6 +63,6 @@ def fast_loop(shared_state, video_path):
       shared_state.update_coverage(cell)
 
     shared_state.update_frame_and_detections(frame, detection_list)
-    time.sleep(0.033)
+    time.sleep(0.033) #about 30 fps
 
   cap.release()

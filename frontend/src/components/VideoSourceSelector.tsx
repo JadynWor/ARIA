@@ -12,7 +12,7 @@ export function VideoSourceSelector({ onVideoReady }: { onVideoReady: () => void
     try {
       const form = new FormData()
       form.append('file', file)
-      const res = await fetch('http://localhost:8000/upload_video', { method: 'POST', body: form })
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/upload_video`, { method: 'POST', body: form })
       if (!res.ok) throw new Error(`Upload failed (${res.status})`)
       onVideoReady()
     } catch (e: any) {
@@ -25,7 +25,7 @@ export function VideoSourceSelector({ onVideoReady }: { onVideoReady: () => void
     setError('')
     setUploading(true)
     try {
-      const res = await fetch('http://localhost:8000/start_demo', { method: 'POST' })
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/start_demo`, { method: 'POST' })
       if (!res.ok) throw new Error(`Failed (${res.status})`)
       onVideoReady()
     } catch (e: any) {

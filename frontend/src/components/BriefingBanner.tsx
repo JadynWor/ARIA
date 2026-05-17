@@ -31,7 +31,7 @@ export function BriefingBanner({ briefings, tick }: { briefings: Briefing[]; tic
 
   const handleLang = (code: string, full: string) => {
     setActiveLang(code)
-    fetch(`http://localhost:8000/set_language?language=${full}`, { method: 'POST' }).catch(() => {})
+    fetch(`${import.meta.env.VITE_API_URL}/set_language?language=${full}`, { method: 'POST' }).catch(() => {})
   }
 
   if (!latest) {

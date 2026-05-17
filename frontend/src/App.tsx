@@ -24,7 +24,7 @@ export default function App() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('autostart') === 'true') {
-      fetch('http://localhost:8000/start_demo', { method: 'POST' })
+      fetch(`${import.meta.env.VITE_API_URL}/start_demo`, { method: 'POST' })
         .then(() => setVideoMode('streaming'))
         .catch(() => {})
     }
@@ -39,8 +39,8 @@ export default function App() {
   // Sync selectedId to backend for two-tier label rendering
   useEffect(() => {
     const url = selectedId !== null
-      ? `http://localhost:8000/set_selected?id=${selectedId}`
-      : 'http://localhost:8000/set_selected'
+      ? `${import.meta.env.VITE_API_URL}/set_selected?id=${selectedId}`
+      : `${import.meta.env.VITE_API_URL}/set_selected`
     fetch(url, { method: 'POST' }).catch(() => {})
   }, [selectedId])
 

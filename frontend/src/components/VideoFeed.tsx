@@ -16,7 +16,7 @@ export function VideoFeed({
     <div className="feed-container">
       <div className="feed-canvas" onClick={onClickAway}>
         <img
-          src="http://localhost:8000/video_feed"
+          src={`${import.meta.env.VITE_API_URL}/video_feed`}
           alt="Drone feed"
           style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
         />

@@ -44,7 +44,7 @@ export function useLiveFeed() {
   }
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8000/stream')
+    const ws = new WebSocket(`${import.meta.env.VITE_WS_URL}/stream`)
 
     ws.onopen = () => {
       setConnected(true)

@@ -24,7 +24,7 @@ export function Header({ connected, tick, onChangeVideo }: { connected: boolean;
 
       <div className="header-mission">
         <span className="mission-label mono">Mission</span>
-        <span className="mission-name mono">Search &amp; Rescue · Active Scan</span>
+        <span className="mission-name mono">Active Scan · Grid Alpha · Local Processing</span>
       </div>
 
       <div className="header-right">

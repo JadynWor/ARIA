@@ -15,7 +15,7 @@ import { MissionLog } from './components/MissionLog'
 export default function App() {
   const {
     connected, tick, detections, coverage, briefings,
-    cellHeat, history, confTrends, criticalAlert,
+    cellHeat, confTrends, criticalAlert, events,
   } = useLiveFeed()
 
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -36,6 +36,14 @@ export default function App() {
     }
   }, [detections, selectedId])
 
+  // Sync selectedId to backend for two-tier label rendering
+  useEffect(() => {
+    const url = selectedId !== null
+      ? `http://localhost:8000/set_selected?id=${selectedId}`
+      : 'http://localhost:8000/set_selected'
+    fetch(url, { method: 'POST' }).catch(() => {})
+  }, [selectedId])
+
   const selected = selectedId !== null
     ? detections.find(d => d.id === selectedId) ?? null
     : null
@@ -45,18 +53,10 @@ export default function App() {
     [detections],
   )
   const rank = selected ? sorted.findIndex(d => d.id === selected.id) + 1 : 0
-  const currentIds = useMemo(() => new Set(detections.map(d => d.id)), [detections])
 
   return (
     <div className={`aria-app ${criticalAlert ? 'critical-flash' : ''}`}>
-      <Header
-        connected={connected}
-        tick={tick}
-        onChangeVideo={videoMode === 'streaming' ? () => {
-          fetch('http://localhost:8000/stop_video', { method: 'POST' })
-          setVideoMode('selecting')
-        } : undefined}
-      />
+      <Header connected={connected} tick={tick} />
 
       <main className="aria-main">
         <div className="left-column">
@@ -66,7 +66,7 @@ export default function App() {
             onSelect={(id) => setSelectedId(prev => prev === id ? null : id)}
             confTrends={confTrends}
           />
-          <MissionLog history={history} currentIds={currentIds} tick={tick} />
+          <MissionLog events={events} />
         </div>
 
         {videoMode === 'selecting'

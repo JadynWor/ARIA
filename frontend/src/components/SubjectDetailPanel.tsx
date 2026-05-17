@@ -1,7 +1,25 @@
 import {
-  type Detection, TONE, CLASS_LABEL, STATUS_LABEL,
-  CLASSIFICATION_WEIGHTS, bboxToGrid, estimateDistance, recommendedAction,
+  type Detection, TONE, STATUS_LABEL,
+  bboxToGrid, recommendedAction,
 } from '../utils/helpers'
+
+const POSTURE_DESC: Record<string, string> = {
+  LYING_DOWN:  'Prone or collapsed — possible casualty',
+  WAVING:      'Upright and signaling — conscious, responsive',
+  STATIONARY:  'Stationary — no visible movement',
+  OBSCURED:    'Partially obscured near tree line or structure',
+  UNKNOWN:     'Posture indeterminate at current distance',
+}
+
+function riskReason(d: Detection, rank: number, total: number): string {
+  if (d.classification === 'LYING_DOWN')
+    return `Critical posture detected. Ranked #${rank} of ${total} — immediate assessment recommended.`
+  if (d.classification === 'WAVING')
+    return `Active signal from subject. Ranked #${rank} of ${total} — high confidence of survivorship.`
+  if (rank === 1)
+    return `Highest priority subject in current scan cluster. Ranked #${rank} of ${total}.`
+  return `Ranked #${rank} of ${total} by confidence and classification weight.`
+}
 
 export function SubjectDetailPanel({
   detection,
@@ -16,8 +34,6 @@ export function SubjectDetailPanel({
 }) {
   const tone = TONE[detection.classification]
   const grid = bboxToGrid(detection.bbox)
-  const distance = estimateDistance(detection.bbox)
-  const weight = CLASSIFICATION_WEIGHTS[detection.classification]
 
   return (
     <section className={`panel panel-subject tone-${tone}`}>
@@ -41,35 +57,30 @@ export function SubjectDetailPanel({
             <dd className="mono">{Math.round(detection.confidence * 100)}%</dd>
           </div>
           <div className="subject-field">
-            <dt className="mono">Grid Sector</dt>
+            <dt className="mono">Sector</dt>
             <dd className="mono accent">{grid}</dd>
           </div>
           <div className="subject-field">
-            <dt className="mono">Classification</dt>
-            <dd className="mono">{CLASS_LABEL[detection.classification]}</dd>
+            <dt className="mono">Posture / Motion</dt>
+            <dd className="mono">{POSTURE_DESC[detection.classification] ?? 'Unknown'}</dd>
           </div>
           <div className="subject-field">
-            <dt className="mono">Distance</dt>
-            <dd className="mono">{distance}</dd>
-          </div>
-          <div className="subject-field">
-            <dt className="mono">Priority Score</dt>
-            <dd className="mono">{detection.priority_score.toFixed(2)}</dd>
+            <dt className="mono">Last Seen</dt>
+            <dd className="mono">0s ago</dd>
           </div>
         </dl>
 
+        <div className="subject-reasoning">
+          <div className="subject-reasoning-label mono">Risk Assessment</div>
+          <p className="subject-reasoning-text mono">{riskReason(detection, rank, total)}</p>
+        </div>
+
         <div className="subject-action">
-          <div className="subject-action-label mono">Recommended Action</div>
+          <div className="subject-action-label mono">Recommended Next Step</div>
           <p className="subject-action-text">{recommendedAction(detection)}</p>
         </div>
 
-        <div className="subject-reasoning">
-          <div className="subject-reasoning-label mono">Why This Ranking</div>
-          <p className="subject-reasoning-text mono">
-            {detection.classification} (weight × {weight}) × {Math.round(detection.confidence * 100)}% = {detection.priority_score.toFixed(2)}.
-            Ranked #{rank} of {total}.
-          </p>
-        </div>
+        <button className="subject-back mono" onClick={onClose}>← Back to coverage</button>
       </div>
     </section>
   )

@@ -43,7 +43,7 @@ export function VideoFeed({
         <div className="feed-stat">
           <div className="feed-stat-num mono">{detections.length.toString().padStart(2, '0')}</div>
           <div className="feed-stat-meta">
-            <span className="feed-stat-label mono">Persons Located</span>
+            <span className="feed-stat-label mono">Persons Detected</span>
             {critical > 0 && (
               <span className="critical-pill">
                 <span className="critical-dot" />

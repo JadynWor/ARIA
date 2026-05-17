@@ -126,6 +126,14 @@ export function CoveragePanel({
             <span className="cov-legend-dot active" />
             Active
           </span>
+          <span className="cov-legend-item">
+            <span className="cov-legend-dot person-found" />
+            Person
+          </span>
+          <span className="cov-legend-item">
+            <span className="cov-legend-dot critical" />
+            Critical
+          </span>
         </div>
       </div>
 

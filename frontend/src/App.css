@@ -233,7 +233,7 @@ button {
 
 .aria-main {
   display: grid;
-  grid-template-columns: 200px 1fr 220px;
+  grid-template-columns: 180px 1fr 200px;
   gap: 12px;
   padding: 12px 12px 6px;
   min-height: 0;
@@ -352,6 +352,8 @@ button {
 }
 
 .section-line { flex: 1; height: 1px; background: var(--border-soft); }
+
+.critical-label { color: var(--coral); }
 
 .prio-row {
   position: relative;
@@ -493,7 +495,7 @@ button {
 }
 
 .feed-stat-num {
-  font-size: 56px;
+  font-size: 44px;
   font-weight: 300;
   line-height: 0.9;
   color: var(--cream);
@@ -695,10 +697,10 @@ button {
 
 .cov-legend {
   display: flex;
-  gap: 14px;
+  gap: 10px;
   padding: 12px 0 4px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
+  font-size: 9px;
+  letter-spacing: 0.08em;
   color: var(--cream-muted);
   flex-wrap: wrap;
 }
@@ -729,6 +731,16 @@ button {
 .cov-legend-dot.active {
   background: var(--amber);
   box-shadow: 0 0 6px rgba(232, 160, 56, 0.5);
+}
+
+.cov-legend-dot.person-found {
+  background: var(--amber-hot);
+  box-shadow: inset 0 0 0 1.5px var(--bg-card);
+}
+
+.cov-legend-dot.critical {
+  background: var(--coral);
+  animation: pulse-critical 1s ease-in-out infinite;
 }
 
 .cov-meta {
@@ -932,6 +944,18 @@ button {
   letter-spacing: 0.005em;
 }
 
+.subject-back {
+  margin-top: auto;
+  padding: 8px 0;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--cream-faint);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.subject-back:hover { color: var(--amber); }
+
 /* ─── Briefing banner ───────────────────────────────────────────────────── */
 
 .briefing-banner {
@@ -1113,6 +1137,39 @@ button {
 
 .briefing-section-action .briefing-section-label {
   color: var(--amber-hot);
+}
+
+.briefing-section-rescue {
+  border-left-color: var(--sage);
+}
+
+.briefing-section-rescue .briefing-section-label {
+  color: var(--sage);
+}
+
+/* ─── Model badge ───────────────────────────────────────────────────────── */
+
+.model-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  background: rgba(86, 166, 138, 0.12);
+  border: 1px solid rgba(86, 166, 138, 0.4);
+  border-radius: 2px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--sage);
+  flex-shrink: 0;
+}
+
+.model-badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--sage);
+  box-shadow: 0 0 6px rgba(86, 166, 138, 0.7);
+  animation: pulse-live 1.6s ease-in-out infinite;
 }
 
 .briefing-section-text {
@@ -1454,8 +1511,8 @@ button {
 
 .mission-log-row {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  align-items: baseline;
+  gap: 10px;
   padding: 4px 14px;
   font-size: 11px;
   letter-spacing: 0.06em;
@@ -1467,11 +1524,8 @@ button {
   background: var(--bg-elevated);
 }
 
-.ml-id    { color: var(--cream); font-weight: 500; min-width: 36px; }
-.ml-sep   { color: var(--cream-faint); }
-.ml-grid  { color: var(--amber); min-width: 20px; }
-.ml-class { min-width: 32px; color: var(--cream-dim); }
-.ml-ago   { color: var(--cream-faint); margin-left: auto; }
+.ml-time { color: var(--cream-faint); font-weight: 500; min-width: 36px; flex-shrink: 0; }
+.ml-text { color: var(--cream-muted); }
 
 /* ─── Subject reasoning (Feature 2) ────────────────────────────────────── */
 
@@ -1589,13 +1643,13 @@ button {
 /* ─── Responsive ────────────────────────────────────────────────────────── */
 
 @media (max-width: 1400px) {
-  .aria-main { grid-template-columns: 180px 1fr 200px; }
-  .feed-stat-num { font-size: 48px; }
+  .aria-main { grid-template-columns: 160px 1fr 180px; }
+  .feed-stat-num { font-size: 40px; }
   .briefing-sections { grid-template-columns: 1fr; gap: 16px; }
 }
 
 @media (max-width: 1200px) {
-  .aria-main { grid-template-columns: 160px 1fr 180px; }
-  .feed-stat-num { font-size: 42px; }
+  .aria-main { grid-template-columns: 140px 1fr 160px; }
+  .feed-stat-num { font-size: 36px; }
   .header-mission { display: none; }
 }

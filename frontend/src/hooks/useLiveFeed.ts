@@ -1,6 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { bboxToGrid, type Classification, type Detection, type Briefing, type HistoryEntry } from '../utils/helpers'
 
+export interface MissionEvent {
+  id: number
+  time: string
+  text: string
+}
+
+let _eventCounter = 0
+
+function fmtClock(elapsed: number): string {
+  const m = Math.floor(elapsed / 60).toString().padStart(2, '0')
+  const s = Math.floor(elapsed % 60).toString().padStart(2, '0')
+  return `${m}:${s}`
+}
+
 export function useLiveFeed() {
   const [connected, setConnected] = useState(false)
   const [tick, setTick] = useState(0)
@@ -11,6 +25,7 @@ export function useLiveFeed() {
   const [confTrends, setConfTrends] = useState<Map<number, 'up' | 'down' | 'stable'>>(new Map())
   const [cellHeat, setCellHeat] = useState<Map<string, number>>(new Map())
   const [history, setHistory] = useState<Map<number, HistoryEntry>>(new Map())
+  const [events, setEvents] = useState<MissionEvent[]>([])
 
   const startRef = useRef<number>(0)
   const seenRef = useRef<Map<number, number>>(new Map())
@@ -19,6 +34,14 @@ export function useLiveFeed() {
   const prevConfRef = useRef<Map<number, number>>(new Map())
   const prevLyingRef = useRef<Set<number>>(new Set())
   const criticalTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const prevIdsRef = useRef<Set<number>>(new Set())
+  const prevCovPctRef = useRef<number>(0)
+  const prevActiveSectorRef = useRef<string>('')
+
+  function pushEvent(elapsed: number, text: string) {
+    const evt: MissionEvent = { id: ++_eventCounter, time: fmtClock(elapsed), text }
+    setEvents(prev => [evt, ...prev].slice(0, 5))
+  }
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:8000/stream')
@@ -49,7 +72,6 @@ export function useLiveFeed() {
           }
         })
 
-        // Feature 7: confidence trends
         const trends = new Map<number, 'up' | 'down' | 'stable'>()
         for (const det of incoming) {
           const prev = prevConfRef.current.get(det.id)
@@ -65,21 +87,18 @@ export function useLiveFeed() {
         }
         setConfTrends(trends)
 
-        // Update prevConfRef for next frame
         const nextConf = new Map<number, number>()
         for (const det of incoming) {
           nextConf.set(det.id, det.confidence)
         }
         prevConfRef.current = nextConf
 
-        // Feature 1: heat map — increment cell counts
         for (const det of incoming) {
           const cell = bboxToGrid(det.bbox)
           cellHeatRef.current.set(cell, (cellHeatRef.current.get(cell) ?? 0) + 1)
         }
         setCellHeat(new Map(cellHeatRef.current))
 
-        // Feature 3: history tracking
         const currentIds = new Set(incoming.map(d => d.id))
         for (const det of incoming) {
           historyRef.current.set(det.id, {
@@ -91,7 +110,24 @@ export function useLiveFeed() {
         }
         setHistory(new Map(historyRef.current))
 
-        // Feature 5: critical alert — new LYING_DOWN detections
+        // Event: new person detected
+        for (const det of incoming) {
+          if (!prevIdsRef.current.has(det.id)) {
+            const grid = bboxToGrid(det.bbox)
+            pushEvent(elapsed, `New person detected in ${grid}`)
+          }
+        }
+        prevIdsRef.current = currentIds
+
+        // Event: active sector changed
+        const activeCells = new Set(incoming.map(d => bboxToGrid(d.bbox)))
+        const activeSector = activeCells.size > 0 ? [...activeCells][0] : ''
+        if (activeSector && activeSector !== prevActiveSectorRef.current) {
+          pushEvent(elapsed, `Active sector changed to ${activeSector}`)
+          prevActiveSectorRef.current = activeSector
+        }
+
+        // Critical alert
         const currentLying = new Set(incoming.filter(d => d.classification === 'LYING_DOWN').map(d => d.id))
         let hasNew = false
         for (const id of currentLying) {
@@ -112,10 +148,18 @@ export function useLiveFeed() {
 
       if (msg.type === 'briefing') {
         setBriefings(prev => [...prev, { report: msg.report, timestamp: parseFloat(msg.timestamp) }])
+        pushEvent(elapsed, 'Briefing refreshed')
       }
 
       if (msg.type === 'coverage') {
-        setCoverage(new Set(msg.searched as string[]))
+        const searched = new Set(msg.searched as string[])
+        setCoverage(searched)
+        const pct = Math.round((searched.size / 40) * 100)
+        const prevPct = prevCovPctRef.current
+        if (pct >= prevPct + 5) {
+          pushEvent(elapsed, `Coverage updated to ${pct}%`)
+          prevCovPctRef.current = pct
+        }
       }
     }
 
@@ -131,5 +175,5 @@ export function useLiveFeed() {
     return () => clearInterval(id)
   }, [connected])
 
-  return { connected, tick, detections, coverage, briefings, cellHeat, history, confTrends, criticalAlert }
+  return { connected, tick, detections, coverage, briefings, cellHeat, history, confTrends, criticalAlert, events }
 }

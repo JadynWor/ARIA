@@ -21,6 +21,7 @@ export interface ParsedBriefing {
   situation: string
   changes: string
   next: string
+  rescuePlan: string
 }
 
 export interface HistoryEntry {
@@ -115,7 +116,7 @@ export function recommendedAction(d: Detection): string {
 export function parseBriefing(report: string): ParsedBriefing {
   const text = report.trim()
 
-  const sectionRegex = /(SITUATION|UPDATE|CURRENT|STATUS|KEY CHANGES|PRIORITY TARGETS|CHANGES|NEXT ACTION|NEXT|ACTION|RECOMMENDED):\s*/gi
+  const sectionRegex = /(SITUATION|UPDATE|CURRENT|STATUS|KEY CHANGES|PRIORITY TARGETS|CHANGES|NEXT ACTION|NEXT|ACTION|RECOMMENDED|RESCUE PLAN|RESCUE):\s*/gi
   const parts: Array<{ label: string; body: string }> = []
   let match: RegExpExecArray | null
   const matches: Array<{ idx: number; label: string }> = []
@@ -135,9 +136,11 @@ export function parseBriefing(report: string): ParsedBriefing {
   let situation = ''
   let changes = ''
   let next = ''
+  let rescuePlan = ''
 
   parts.forEach(p => {
-    if (/SITUATION|CURRENT|STATUS/.test(p.label)) situation = situation ? `${situation} ${p.body}` : p.body
+    if (/RESCUE PLAN|RESCUE/.test(p.label)) rescuePlan = rescuePlan ? `${rescuePlan} ${p.body}` : p.body
+    else if (/SITUATION|CURRENT|STATUS/.test(p.label)) situation = situation ? `${situation} ${p.body}` : p.body
     else if (/UPDATE|KEY CHANGES|PRIORITY TARGETS|CHANGES/.test(p.label)) changes = changes ? `${changes} ${p.body}` : p.body
     else if (/NEXT|ACTION|RECOMMENDED/.test(p.label)) next = next ? `${next} ${p.body}` : p.body
   })
@@ -166,5 +169,6 @@ export function parseBriefing(report: string): ParsedBriefing {
     situation: situation.trim(),
     changes: changes.trim(),
     next: next.trim(),
+    rescuePlan: rescuePlan.trim(),
   }
 }

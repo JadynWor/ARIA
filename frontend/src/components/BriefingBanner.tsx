@@ -39,7 +39,10 @@ export function BriefingBanner({ briefings, tick }: { briefings: Briefing[]; tic
       <section className="briefing-banner awaiting">
         <span className="briefing-icon-pulse" />
         <span className="briefing-banner-title serif italic">Awaiting first briefing</span>
-        <span className="briefing-banner-stamp mono">Gemma 4B · on-device</span>
+        <span className="model-badge mono">
+          <span className="model-badge-dot" />
+          GEMMA 4B · ON-DEVICE
+        </span>
         <span className="briefing-banner-spacer" />
       </section>
     )
@@ -55,6 +58,10 @@ export function BriefingBanner({ briefings, tick }: { briefings: Briefing[]; tic
         <span className="briefing-banner-title serif italic">Field Briefing</span>
         <span className="briefing-banner-stamp mono">T+{fmtTime(tick)}</span>
         {showNew && <span className="new-badge mono">NEW</span>}
+        <span className="model-badge mono">
+          <span className="model-badge-dot" />
+          GEMMA 4B · ON-DEVICE
+        </span>
 
         <span className="lang-group" onClick={e => e.stopPropagation()}>
           {LANGUAGES.map(l => (
@@ -98,6 +105,12 @@ export function BriefingBanner({ briefings, tick }: { briefings: Briefing[]; tic
               <div className="briefing-section briefing-section-action">
                 <div className="briefing-section-label mono">Next Action</div>
                 <p className="briefing-section-text serif">{parsed.next}</p>
+              </div>
+            )}
+            {parsed.rescuePlan && (
+              <div className="briefing-section briefing-section-rescue">
+                <div className="briefing-section-label mono">Rescue Plan</div>
+                <p className="briefing-section-text serif">{parsed.rescuePlan}</p>
               </div>
             )}
           </div>

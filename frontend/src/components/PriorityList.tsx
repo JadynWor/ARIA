@@ -61,7 +61,7 @@ export function PriorityList({
           {critical.length > 0 && (
             <>
               <div className="priority-section">
-                <span className="section-label mono">Critical</span>
+                <span className="section-label mono critical-label">CRITICAL</span>
                 <span className="section-line" />
               </div>
               {critical.map(d => (
@@ -72,7 +72,7 @@ export function PriorityList({
           {rest.length > 0 && (
             <>
               <div className="priority-section">
-                <span className="section-label mono">Located</span>
+                <span className="section-label mono">LOCATED</span>
                 <span className="section-line" />
               </div>
               {rest.map(d => (

@@ -15,25 +15,26 @@ def slow_loop(shared_state):
             continue
     
         
-        # Build detection summary for the prompt
         det_summary = ""
         for det in snapshot["detections"]:
-            det_summary += f"- Person ID {det['id']}, bbox {det['bbox']}, confidence {det['confidence']:.2f}\n"
+            cls = det.get('classification', 'UNKNOWN')
+            det_summary += f"- ID {det['id']}, sector bbox {det['bbox']}, confidence {det['confidence']:.0%}, class {cls}\n"
         
         if not det_summary:
             det_summary = "No persons currently detected.\n"
         
+        searched = len(snapshot.get('searched', []))
         prompt = f"""Respond in {snapshot.get('language', 'English')}.
-You are an aerial search and rescue analyst. Be concise.
+You are a field intelligence analyst supporting an aerial search and rescue mission. Write in a direct, operational tone. No filler. No bullet points. Short declarative sentences only.
 
-Current detections:
+Current scan data:
 {det_summary}
-Coverage: {len(snapshot.get('searched', []))}/40 grid cells searched.
+Coverage: {searched}/40 grid cells searched.
 
-Generate a situation report in this exact format:
-SITUATION: [1 sentence summary of current state]
-KEY CHANGES: [what changed since last scan — new detections, movements, priority shifts]
-NEXT ACTION: [specific instruction for drone operator]"""
+Write a situation report in this exact format:
+SITUATION: [1-2 sentences: how many potential subjects detected, where they cluster, confidence levels]
+KEY CHANGES: [1-2 sentences: new detections, sector changes, priority shifts since last scan]
+NEXT ACTION: [1 specific instruction for the drone operator: which subject to prioritize, which sector to scan next]"""
 
     
         print(f"[SLOW LOOP] Sending request to Ollama with {len(snapshot['detections'])} detections...")    

@@ -11,6 +11,7 @@ class SharedState:
     self._timestamp = 0
     self._searched_cells = set()
     self._language = "English"
+    self._selected_id = None
 
   def get_snapshot(self):
     with self._lock:
@@ -22,7 +23,8 @@ class SharedState:
         "timestamp": self._timestamp,
         "searched": list(self._searched_cells),
         "coverage": int(len(self._searched_cells) / 40 * 100),  # Assuming 40 total cells for coverage calculation
-        "language": self._language  
+        "language": self._language,
+        "selected_id": self._selected_id,
       }
   
   def update_language(self, language):
@@ -42,6 +44,10 @@ class SharedState:
       self._latest_frame = frame
       self._detections = detections
       self._timestamp = time.time()
+
+  def update_selected(self, sid):
+    with self._lock:
+      self._selected_id = sid
 
   def update_coverage(self, cell):
     with self._lock:

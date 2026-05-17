@@ -15,9 +15,9 @@ def fast_loop(shared_state, video_path):
       track_activation_threshold=0.2,  # lower = keep more tracks
     lost_track_buffer=60,            # keep lost tracks for 60 frames (~2 sec)
     minimum_matching_threshold=0.7,  # less strict matching
-    frame_rate=30
+    frame_rate=10
   )
-  
+   
   while True:
     ret, frame = cap.read()
     if not ret:
@@ -63,6 +63,6 @@ def fast_loop(shared_state, video_path):
       shared_state.update_coverage(cell)
 
     shared_state.update_frame_and_detections(frame, detection_list)
-    time.sleep(0.033) #about 30 fps
+    time.sleep(0.060) #about 30 fps
 
   cap.release()

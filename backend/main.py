@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 shared_state = SharedState()
-DEMO_VIDEO = "data/testrun3.mp4"
+DEMO_VIDEO = "data/DEMO_FINAL_VID.mp4"
 _fast_loop_thread: threading.Thread | None = None
 
 def _kill_thread(t: threading.Thread):
@@ -73,7 +73,12 @@ def read_root():
     return {"status": "ARIA running"}
 
 # Replace solid rectangles with corner-only markers
-def draw_corners(img, x1, y1, x2, y2, color, length=15, thickness=2):
+CLASS_SHORT = {
+    "WAVING": "WAVE", "LYING_DOWN": "CRIT",
+    "STATIONARY": "STAT", "OBSCURED": "OBSC", "UNKNOWN": "UNKN",
+}
+
+def draw_corners(img, x1, y1, x2, y2, color, length=20, thickness=3):
     # Top-left
     cv2.line(img, (x1, y1), (x1 + length, y1), color, thickness)
     cv2.line(img, (x1, y1), (x1, y1 + length), color, thickness)
@@ -98,7 +103,11 @@ def generate_frames():
             scale_x = 960 / w
             scale_y = 720 / h
 
-            for det in snapshot["detections"]:
+            dets = snapshot["detections"]
+            selected_id = snapshot.get("selected_id")
+            top_id = max(dets, key=lambda d: d.get("priority_score", 0))["id"] if dets else None
+
+            for det in dets:
                 x1, y1, x2, y2 = det["bbox"]
                 sx1 = int(x1 * scale_x)
                 sy1 = int(y1 * scale_y)
@@ -113,9 +122,21 @@ def generate_frames():
                 else:
                     color = (0, 255, 255)
 
-                #cv2.rectangle(small, (sx1, sy1), (sx2, sy2), color, 2)
-                draw_corners(small, sx1, sy1, sx2, sy2, color)
-                cv2.putText(small, f"#{det['id']} {conf:.0%}", (sx1, sy1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                is_highlight = det["id"] == selected_id or det["id"] == top_id
+
+                if is_highlight:
+                    draw_corners(small, sx1, sy1, sx2, sy2, color, length=20, thickness=3)
+                    label = f"#{det['id']} {CLASS_SHORT.get(det.get('classification','UNKNOWN'),'UNKN')} {conf:.0%}"
+                    (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
+                    cv2.rectangle(small, (sx1, sy1 - th - 12), (sx1 + tw + 4, sy1 - 2), (0, 0, 0), -1)
+                    cv2.putText(small, label, (sx1 + 2, sy1 - 8), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                else:
+                    dim = tuple(int(c * 0.5) for c in color)
+                    draw_corners(small, sx1, sy1, sx2, sy2, dim, length=14, thickness=2)
+                    label = f"#{det['id']} {conf:.0%}"
+                    (tw, th), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.35, 1)
+                    cv2.rectangle(small, (sx1, sy1 - th - 8), (sx1 + tw + 4, sy1 - 2), (0, 0, 0), -1)
+                    cv2.putText(small, label, (sx1 + 2, sy1 - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.35, dim, 1)
                 
             map_size = 160
             map_x = 960 - map_size - 10  # 10px padding from right
@@ -160,7 +181,7 @@ def generate_frames():
             frame_bytes = buffer.tobytes()
             yield (b'--frame\r\n'
                    b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-        time.sleep(0.033)
+        time.sleep(0.10)
 
 @app.get("/video_feed")
 def video_feed():
@@ -211,6 +232,11 @@ def stop_video():
         shared_state._searched_cells = set()
         shared_state._briefing = ""
     return {"status": "stopped"}
+
+@app.post("/set_selected")
+def set_selected(id: int = None):
+    shared_state.update_selected(id)
+    return {"status": "ok"}
 
 @app.post("/set_language")
 def set_language(language: str = "English"):

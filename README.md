@@ -4,7 +4,7 @@ Real-time AI pipeline for drone-based search and rescue operations. ARIA process
 
 ## Demo
 
-[Live Demo URL] | [3-Minute Video]
+http://34.125.81.248:5173/
 
 ## Architecture
 Drone Video → YOLO v9c (Detection) → ByteTrack (Tracking) → EfficientNet (Classification)

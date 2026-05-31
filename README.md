@@ -17,7 +17,7 @@ MJPEG Stream ← FastAPI
 
 - **Real-time human detection** — Fine-tuned YOLOv9c achieving 0.861 mAP50 on aerial SAR imagery
 - **Persistent tracking** — ByteTrack maintains identity across frames with Kalman filter prediction
-- **Distress classification** — EfficientNet-B0 categorizes survivors (WAVING/LYING_DOWN/STATIONARY/OBSCURED)
+- **Distress classification** — EfficientNet-B0 categorizes survivors (LYING_DOWN/STATIONARY/OBSCURED)
 - **AI rescue briefings** — Gemma 4B analyzes drone footage + detections to generate prioritized situation reports
 - **Coverage mapping** — 5x8 grid tracks searched areas in real-time
 - **Fully offline** — All processing runs locally, no cloud dependencies

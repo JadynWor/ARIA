@@ -2,6 +2,12 @@
 
 Real-time AI pipeline for drone-based search and rescue operations. ARIA processes live drone footage to detect survivors, track individuals across frames, classify distress levels, and generate prioritized rescue briefings using Gemma 4B.
 
+## Hackathon Tracks
+- **Global Resilience** — Offline edge-based disaster response
+- **Ollama** — Gemma 4B running locally via Ollama
+- **Unsloth** — Gemma fine-tuned on SAR data via Unsloth
+- **Main Track** — Full-stack AI application with real-world impact
+
 ## Demo
 
 http://34.125.81.248:5173/
